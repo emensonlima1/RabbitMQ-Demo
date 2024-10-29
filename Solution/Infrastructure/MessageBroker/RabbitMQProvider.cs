@@ -146,7 +146,7 @@ public class RabbitMQProvider
             if (!confirmReceived)
                 throw new Exception("RabbitMQ channel confirmation failed");
         }
-        catch (Exception exception)
+        catch (Exception)
         {
             // ignore
         }
@@ -192,7 +192,7 @@ public class RabbitMQProvider
                     
                     _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
                 }
-                catch (Exception exception)
+                catch (Exception)
                 {
                     _channel.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true); 
                 }
