@@ -8,13 +8,13 @@ public class EventBus : IEventBus
 {
     private static readonly RabbitMQProvider RabbitProvider = new();
     
-    public void Publish(EventDto eventDto)
+    public void Publish(PublishEventDto eventDto)
     {
         RabbitProvider.Publish(eventDto);   
     }
 
-    public void Subscribe(EventDto eventDto, IEventHandler eventHandler)
+    public void Subscribe(SubscribeEventDto subscribeEventDto, IEventHandler eventHandler)
     {
-        RabbitProvider.Subscribe(eventDto, eventHandler);
+        RabbitProvider.Subscribe(subscribeEventDto, eventHandler);
     }
 }

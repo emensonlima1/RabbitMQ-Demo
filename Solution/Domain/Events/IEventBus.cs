@@ -5,6 +5,6 @@ namespace Domain.Events;
 
 public interface IEventBus
 {
-    void Publish(EventDto eventDto);
-    void Subscribe(EventDto eventDto, IEventHandler eventHandler);
+    void Publish(PublishEventDto eventDto);
+    void Subscribe(SubscribeEventDto subscribeEventDto, IEventHandler eventHandler);
 }

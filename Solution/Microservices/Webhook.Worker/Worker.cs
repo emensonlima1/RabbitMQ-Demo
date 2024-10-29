@@ -1,24 +1,27 @@
+using Common.DTOs;
+using Common.Interfaces;
+using Domain.Events;
+
 namespace Webhook.Worker;
 
-public class Worker : BackgroundService
+public class Worker(ILogger<Worker> logger, IEventBus eventBus, IEventHandler eventHandler) : BackgroundService
 {
-    private readonly ILogger<Worker> _logger;
-
-    public Worker(ILogger<Worker> logger)
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger = logger;
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        while (!stoppingToken.IsCancellationRequested)
+        if (logger.IsEnabled(LogLevel.Information))
         {
-            if (_logger.IsEnabled(LogLevel.Information))
-            {
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-            }
-
-            await Task.Delay(1000, stoppingToken);
+            logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
         }
+
+        eventBus.Subscribe(
+            new SubscribeEventDto
+            (
+                "webhook.created",
+                "webhook.events",
+                "direct",
+                "webhook.created"
+            ),
+            eventHandler);
+        return Task.CompletedTask;
     }
 }

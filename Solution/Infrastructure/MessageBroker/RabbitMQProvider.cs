@@ -109,7 +109,7 @@ public class RabbitMQProvider
         }
     }
 
-    public void Publish(EventDto eventDto)
+    public void Publish(PublishEventDto eventDto)
     {
         try
         {
@@ -152,29 +152,29 @@ public class RabbitMQProvider
         }
     }
     
-    public void Subscribe(EventDto eventDto, IEventHandler eventHandler)
+    public void Subscribe(SubscribeEventDto subscribeEventDto, IEventHandler eventHandler)
     {
         try
         {
             _channel = CreateChannel();
 
             _channel.ExchangeDeclare(
-                exchange: eventDto.Exchange,
-                type: eventDto.ExchangeType,
+                exchange: subscribeEventDto.Exchange,
+                type: subscribeEventDto.ExchangeType,
                 durable: true,
                 autoDelete: false,
                 arguments: null
             );
             
             _channel.QueueDeclare(
-                queue: eventDto.QueueName,
+                queue: subscribeEventDto.QueueName,
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
                 arguments: null
             );
             
-            _channel.QueueBind(queue: eventDto.QueueName, exchange: eventDto.Exchange, routingKey: eventDto.RoutingKey);
+            _channel.QueueBind(queue: subscribeEventDto.QueueName, exchange: subscribeEventDto.Exchange, routingKey: subscribeEventDto.RoutingKey);
             
             _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
 
@@ -198,7 +198,7 @@ public class RabbitMQProvider
                 }
             };
             
-            _channel.BasicConsume(queue: eventDto.QueueName, autoAck: false, consumer: consumer);
+            _channel.BasicConsume(queue: subscribeEventDto.QueueName, autoAck: false, consumer: consumer);
         }
         catch (Exception)
         {
