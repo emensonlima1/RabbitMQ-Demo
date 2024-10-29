@@ -1,5 +1,7 @@
 using System.Net.Sockets;
 using System.Text;
+using Common.DTOs;
+using Common.Interfaces;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
