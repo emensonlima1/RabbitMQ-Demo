@@ -1,5 +1,7 @@
 using System.Net.Sockets;
 using System.Text;
+using Common.Configurations;
+using Common.Configurations.Base;
 using Common.DTOs;
 using Common.Interfaces;
 using RabbitMQ.Client;
@@ -16,6 +18,7 @@ public class RabbitMQProvider
     private IBasicProperties _properties;
     private readonly string _appName = AppDomain.CurrentDomain.FriendlyName;
     private readonly string _machineName = Environment.MachineName;
+    private readonly RabbitMqSettings _settings = AppSettingsLoader.GetSettings<RabbitMqSettings>("RabbitMqSettings");
     
     private IModel CreateChannel()
     {
@@ -71,15 +74,15 @@ public class RabbitMQProvider
 
             _factory = new ConnectionFactory()
             {
-                HostName = "localhost",
-                UserName = "admin",
-                Password = "admin",
-                VirtualHost = "/",
-                Port = AmqpTcpEndpoint.UseDefaultPort,
+                HostName = _settings.HostName,
+                UserName = _settings.UserName,
+                Password = _settings.Password,
+                VirtualHost = _settings.VirtualHost,
+                Port = _settings.Port,
                 ClientProvidedName = $"App: {_appName}, Machine: {_machineName}",
-                RequestedConnectionTimeout = TimeSpan.FromMilliseconds(1000),
-                AutomaticRecoveryEnabled = true,
-                NetworkRecoveryInterval = TimeSpan.FromMilliseconds(1000),
+                RequestedConnectionTimeout = TimeSpan.FromMilliseconds(_settings.RequestedConnectionTimeout),
+                AutomaticRecoveryEnabled = _settings.AutomaticRecoveryEnabled,
+                NetworkRecoveryInterval = TimeSpan.FromMilliseconds(_settings.NetworkRecoveryInterval),
             };
 
             _connection = _factory.CreateConnection();

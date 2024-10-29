@@ -1,3 +1,4 @@
+using Common.Configurations;
 using Webhook.Worker;
 
 var builder = Host.CreateApplicationBuilder(args);
