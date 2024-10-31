@@ -1,3 +1,4 @@
+using System.Collections;
 using Common.DTOs;
 using Common.Interfaces;
 using Domain.Events;
@@ -13,13 +14,14 @@ public class Worker(ILogger<Worker> logger, IEventBus eventBus, IEventHandler ev
             logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
         }
 
+        var exchanges = new List<ExchangeDto>();
+        exchanges.Add(new ExchangeDto("webhook.events", "direct", "webhook.created"));
+
         eventBus.Subscribe(
             new SubscribeEventDto
             (
                 "webhook.created",
-                "webhook.events",
-                "direct",
-                "webhook.created"
+                exchanges
             ),
             eventHandler);
         return Task.CompletedTask;

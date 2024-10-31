@@ -1,9 +1,9 @@
 namespace Common.DTOs;
 
-public class SubscribeEventDto(string queueName, string exchange, string exchangeType, string routingKey)
+public class SubscribeEventDto(
+    string queueName,
+    IList<ExchangeDto> exchanges)
 {
-    public string QueueName { get; set; } = queueName;
-    public string Exchange { get; set;} = exchange;
-    public string ExchangeType { get; set;} = exchangeType;
-    public string RoutingKey { get; set;} = routingKey;
+    public string QueueName { get; } = queueName;
+    public IList<ExchangeDto> Exchanges { get; set; } = exchanges;
 }

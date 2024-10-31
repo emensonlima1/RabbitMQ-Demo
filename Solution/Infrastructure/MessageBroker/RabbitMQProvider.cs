@@ -19,22 +19,22 @@ public class RabbitMQProvider
     private readonly string _appName = AppDomain.CurrentDomain.FriendlyName;
     private readonly string _machineName = Environment.MachineName;
     private readonly RabbitMqSettings _settings = AppSettingsLoader.GetSettings<RabbitMqSettings>("RabbitMqSettings");
-    
+
     private IModel CreateChannel()
     {
         try
         {
             CreateConnection();
-            
+
             if (_channel != null)
             {
                 if (_channel.IsOpen) return _channel;
             }
-            
+
             _channel = _connection!.CreateModel();
-            
+
             var channelNumber = _channel.ChannelNumber;
-            
+
             // _channel.ModelShutdown += HandleShutdownEvent;
             // _channel.CallbackException += HandleCallbackException;
             // _channel.BasicReturn += HandleBasicReturn;
@@ -57,10 +57,10 @@ public class RabbitMQProvider
         {
             // ignore
         }
-        
+
         return _channel!;
     }
-    
+
     private void CreateConnection()
     {
         try
@@ -86,7 +86,7 @@ public class RabbitMQProvider
             };
 
             _connection = _factory.CreateConnection();
-            
+
             // _connection.ConnectionShutdown += HandleShutdownEvent;
             // _connection.CallbackException += HandleCallbackException;
             // _connection.ConnectionBlocked += HandleBlockedEvent;
@@ -113,10 +113,10 @@ public class RabbitMQProvider
     {
         try
         {
-            var messageId =  Guid.NewGuid().ToString();
-            
+            var messageId = Guid.NewGuid().ToString();
+
             _channel = CreateChannel();
-            
+
             _channel.ConfirmSelect();
 
             _channel.ExchangeDeclare(
@@ -126,11 +126,11 @@ public class RabbitMQProvider
                 autoDelete: false,
                 arguments: null
             );
-            
+
             _properties = _channel.CreateBasicProperties();
-            _properties.Persistent = true; 
-            _properties.ContentType = "application/json"; 
-            _properties.Priority = 0; 
+            _properties.Persistent = true;
+            _properties.ContentType = "application/json";
+            _properties.Priority = 0;
             _properties.MessageId = messageId;
             _properties.DeliveryMode = 2;
 
@@ -151,20 +151,12 @@ public class RabbitMQProvider
             // ignore
         }
     }
-    
+
     public void Subscribe(SubscribeEventDto subscribeEventDto, IEventHandler eventHandler)
     {
         try
         {
             _channel = CreateChannel();
-
-            _channel.ExchangeDeclare(
-                exchange: subscribeEventDto.Exchange,
-                type: subscribeEventDto.ExchangeType,
-                durable: true,
-                autoDelete: false,
-                arguments: null
-            );
             
             _channel.QueueDeclare(
                 queue: subscribeEventDto.QueueName,
@@ -174,12 +166,26 @@ public class RabbitMQProvider
                 arguments: null
             );
             
-            _channel.QueueBind(queue: subscribeEventDto.QueueName, exchange: subscribeEventDto.Exchange, routingKey: subscribeEventDto.RoutingKey);
+            _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+
+            foreach (var exchange in subscribeEventDto.Exchanges)
+            {
+                _channel.ExchangeDeclare(
+                    exchange: exchange.Exchange,
+                    type: exchange.ExchangeType,
+                    durable: true,
+                    autoDelete: false,
+                    arguments: null
+                );
+                
+                _channel.QueueBind(queue: subscribeEventDto.QueueName, exchange: exchange.Exchange,
+                    routingKey: exchange.RoutingKey);
+            }
             
             _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
 
             var consumer = new EventingBasicConsumer(_channel);
-            
+
             consumer.Received += (model, ea) =>
             {
                 try
@@ -187,17 +193,17 @@ public class RabbitMQProvider
                     var messageId = ea.BasicProperties.MessageId;
                     var body = ea.Body.ToArray();
                     var message = Encoding.UTF8.GetString(body);
-                    
+
                     eventHandler.Handle(message);
-                    
+
                     _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
                 }
                 catch (Exception)
                 {
-                    _channel.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true); 
+                    _channel.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true);
                 }
             };
-            
+
             _channel.BasicConsume(queue: subscribeEventDto.QueueName, autoAck: false, consumer: consumer);
         }
         catch (Exception)

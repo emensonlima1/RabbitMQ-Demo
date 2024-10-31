@@ -1,9 +1,8 @@
 namespace Common.DTOs;
 
-public class PublishEventDto(string exchange, string exchangeType, string routingKey, string message)
+public class ExchangeDto(string exchange, string exchangeType, string routingKey)
 {
     public string Exchange { get; set; } = exchange;
     public string ExchangeType { get; set; } = exchangeType;
     public string RoutingKey { get; set; } = routingKey;
-    public string Message { get; set; } = message;
 }
